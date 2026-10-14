@@ -3,13 +3,11 @@ from typing import Annotated
 import os
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 
 BASE_DIR = Path(__file__).parent
 
-# Si estamos en Vercel, usamos /tmp ya que es la única ruta con permisos de escritura
 if os.environ.get("VERCEL"):
     UPLOAD_DIR = Path("/tmp/subidas")
 else:
@@ -20,7 +18,7 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 app = FastAPI()
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
-app.mount("/subidas", StaticFiles(directory=UPLOAD_DIR), name="subidas")
+# ELIMINAMOS app.mount("/subidas", ...) porque no funciona en serverless con /tmp
 
 
 def listar_archivos() -> list[dict[str, str]]:
@@ -36,6 +34,15 @@ def listar_archivos() -> list[dict[str, str]]:
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     return templates.TemplateResponse(request, "index.html", {"archivos": listar_archivos()})
+
+
+# Nueva ruta para descargar/ver los archivos subidos desde /tmp
+@app.get("/subidas/{nombre_archivo}")
+def obtener_archivo(nombre_archivo: str):
+    archivo_path = UPLOAD_DIR / nombre_archivo
+    if not archivo_path.is_file():
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+    return FileResponse(archivo_path)
 
 
 @app.post("/subir", response_class=HTMLResponse)
