@@ -1,0 +1,25 @@
+{% if archivos %}
+    <table>
+        <caption>Lista actual en el servidor</caption>
+        <thead>
+            <tr>
+                <th>Documento</th>
+                <th>Peso</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for archivo in archivos %}
+                <tr>
+                    <td>
+                        <a href="/subidas/{{ archivo.nombre }}">{{ archivo.nombre }}</a>
+                    </td>
+                    <td>
+                        <time>{{ archivo.tamano }}</time>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p><em>No hay registros disponibles actualmente.</em></p>
+{% endif %}

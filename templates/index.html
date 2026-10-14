@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Gestor de Archivos</title>
+    <script src="https://unpkg.com/htmx.org@2"></script>
+</head>
+<body>
+    <header>
+        <h1>Panel de Carga</h1>
+    </header>
+
+    <main>
+        <section>
+            <form hx-post="/subir"
+                  hx-target="#lista-archivos-contenedor"
+                  hx-swap="innerHTML"
+                  hx-encoding="multipart/form-data">
+                <fieldset>
+                    <legend>Seleccionar archivo para enviar</legend>
+                    <p>
+                        <input type="file" name="archivo" required>
+                    </p>
+                    <p>
+                        <button type="submit">Enviar al servidor</button>
+                    </p>
+                </fieldset>
+            </form>
+        </section>
+
+        <section>
+            <h2>Archivos almacenados</h2>
+            <div id="lista-archivos-contenedor">
+                {% include "_archivos.html" %}
+            </div>
+        </section>
+    </main>
+</body>
+</html>
