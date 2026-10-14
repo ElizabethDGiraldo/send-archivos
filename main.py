@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Annotated
+import os
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse
@@ -7,7 +8,13 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 BASE_DIR = Path(__file__).parent
-UPLOAD_DIR = BASE_DIR / "subidas"
+
+# Si estamos en Vercel, usamos /tmp ya que es la única ruta con permisos de escritura
+if os.environ.get("VERCEL"):
+    UPLOAD_DIR = Path("/tmp/subidas")
+else:
+    UPLOAD_DIR = BASE_DIR / "subidas"
+
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 app = FastAPI()
@@ -17,6 +24,8 @@ app.mount("/subidas", StaticFiles(directory=UPLOAD_DIR), name="subidas")
 
 
 def listar_archivos() -> list[dict[str, str]]:
+    if not UPLOAD_DIR.exists():
+        return []
     archivos = sorted([f for f in UPLOAD_DIR.iterdir() if f.is_file()], reverse=True)
     return [
         {"nombre": archivo.name, "tamano": f"{archivo.stat().st_size / 1024:.1f} KB"}
