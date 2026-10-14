@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 
 BASE_DIR = Path(__file__).parent
 
+# En Vercel usamos /tmp ya que es la única ruta con permisos de escritura
 if os.environ.get("VERCEL"):
     UPLOAD_DIR = Path("/tmp/subidas")
 else:
@@ -17,8 +18,6 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 app = FastAPI()
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
-
-# ELIMINAMOS app.mount("/subidas", ...) porque no funciona en serverless con /tmp
 
 
 def listar_archivos() -> list[dict[str, str]]:
@@ -36,7 +35,13 @@ def index(request: Request):
     return templates.TemplateResponse(request, "index.html", {"archivos": listar_archivos()})
 
 
-# Nueva ruta para descargar/ver los archivos subidos desde /tmp
+# Endpoint para ver la lista de archivos en formato JSON si entran a /subidas
+@app.get("/subidas")
+def listar_directorio():
+    return listar_archivos()
+
+
+# Endpoint para descargar o ver un archivo específico
 @app.get("/subidas/{nombre_archivo}")
 def obtener_archivo(nombre_archivo: str):
     archivo_path = UPLOAD_DIR / nombre_archivo
